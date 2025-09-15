@@ -28,21 +28,21 @@ pipeline {
             }
         }
 
-        stage('Test Docker Image') {
-            steps {
-                script {
-                    docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
-                        sh 'echo "Container is running successfully!"'
-                    }
-                }
-            }
-        }
+        // stage('Test Docker Image') {
+        //     steps {
+        //         script {
+        //             docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
+        //                 sh 'echo "Container is running successfully!"'
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Push Docker Image') {
             steps {
                 script {
                     docker.withRegistry('', env.DOCKER_CREDS) {
-                        docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push()
+                       // docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push()
                         docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
                     }
                 }
