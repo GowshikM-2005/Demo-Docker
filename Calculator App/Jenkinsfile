@@ -6,7 +6,8 @@ pipeline {
         REGISTRY_USER = 'gowshikm'
         DOCKER_CREDS  = credentials('docker-hub-creds')
         DOCKER_TAG    = "${BUILD_ID}"
-        IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}" 
+        IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}"
+        DOCKER_BUILDKIT = '1'
     }
 
     stages {
