@@ -7,7 +7,6 @@ pipeline {
         DOCKER_CREDS  = credentials('docker-hub-creds')
         DOCKER_TAG    = "${BUILD_ID}"
         IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}"
-        DOCKER_BUILDKIT = '0'
     }
 
     stages {
@@ -21,7 +20,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}")
+                     dir(env.DOCKERFILE_DIR) {
+                        docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}")
+                    }
                 }
             }
         }
