@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REPO_NAME     = 'Demo-Docker'
+        REPO_NAME     = 'demo-docker'
         REGISTRY_USER = 'gowshikm'
         DOCKER_CREDS  = credentials('docker-hub-creds')
         DOCKER_TAG    = "${BUILD_ID}"
