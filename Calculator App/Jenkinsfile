@@ -2,14 +2,28 @@ pipeline {
     agent any
 
     environment {
-        REPO_NAME    = 'Demo-Docker'
-        REGISTRY_USER = 'gowshikm'                  // DockerHub username
-        DOCKER_CREDS  = credentials('gowshikm')     // Jenkins credentials ID
-        DOCKER_TAG    = "${BUILD_ID}"               // Jenkins build ID
-       
+        REPO_NAME     = 'Demo-Docker'
+        REGISTRY_USER = 'gowshikm'
+        DOCKER_CREDS  = credentials('gowshikm')
+        DOCKER_TAG    = "${BUILD_ID}"
+    }
+
+    // Declare imageName once and reuse everywhere
+    options {
+        skipDefaultCheckout(true)
     }
 
     stages {
+        stage('Set Variables') {
+            steps {
+                script {
+                    // Compute image name once
+                    IMAGE_NAME = "${env.REGISTRY_USER}/${env.REPO_NAME}"
+                    echo "Using image name: ${IMAGE_NAME}:${env.DOCKER_TAG}"
+                }
+            }
+        }
+
         stage('Checkout SCM') {
             steps {
                 git branch: 'main',
@@ -20,9 +34,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def imageName = "${env.REGISTRY_USER}/${env.REPO_NAME}"
-                    docker.build("${imageName}:${env.DOCKER_TAG}")
-
+                    docker.build("${IMAGE_NAME}:${env.DOCKER_TAG}")
                 }
             }
         }
@@ -30,7 +42,7 @@ pipeline {
         stage('Test Docker Image') {
             steps {
                 script {
-                    docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
+                    docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
                         sh 'echo "Container is running successfully!"'
                     }
                 }
@@ -41,8 +53,8 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', env.DOCKER_CREDS) {
-                        docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push()
-                        docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
+                        docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").push()
+                        docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
                     }
                 }
             }
@@ -54,17 +66,15 @@ pipeline {
             echo 'Docker build pipeline finished.'
             script {
                 try {
-                   node{ 
-                    sh "docker rmi ${env.IMAGE_NAME}:${env.DOCKER_TAG} || true"
-                    sh "docker rmi ${env.IMAGE_NAME}:latest || true" 
-                   }
+                    sh "docker rmi ${IMAGE_NAME}:${env.DOCKER_TAG} || true"
+                    sh "docker rmi ${IMAGE_NAME}:latest || true"
                 } catch (Exception e) {
                     echo "Cleanup failed: ${e.message}"
                 }
             }
         }
         success {
-            echo "Image pushed successfully: ${env.IMAGE_NAME}:latest"
+            echo "Image pushed successfully: ${IMAGE_NAME}:latest"
         }
         failure {
             echo 'Pipeline failed! Check the logs.'
