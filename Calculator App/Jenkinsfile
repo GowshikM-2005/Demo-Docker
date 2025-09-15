@@ -6,23 +6,8 @@ pipeline {
         REGISTRY_USER = 'gowshikm'
         DOCKER_CREDS  = credentials('gowshikm')
         DOCKER_TAG    = "${BUILD_ID}"
+        IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}" 
     }
-
-    // Declare imageName once and reuse everywhere
-    options {
-        skipDefaultCheckout(true)
-    }
-
-    stages {
-        stage('Set Variables') {
-            steps {
-                script {
-                    // Compute image name once
-                    env.IMAGE_NAME = "${env.REGISTRY_USER}/${env.REPO_NAME}"
-                    echo "Using image name: ${env.IMAGE_NAME}:${env.DOCKER_TAG}"
-                }
-            }
-        }
 
         stage('Checkout SCM') {
             steps {
