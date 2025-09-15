@@ -1,19 +1,18 @@
 pipeline {
     agent any
+    // Define environment variables for easy configuration
     environment {
-        // Name of your Git repository
-        REPO_NAME = 'Demo-Docker'
-        // Your container registry username (e.g., for Docker Hub)
-        REGISTRY_USER = 'gowshikm'
-        // The full name for the image to be built
+        REPO_NAME = 'your-repo-name'
+        REGISTRY_USER = 'your-dockerhub-username'
         IMAGE_NAME = "${REGISTRY_USER}/${REPO_NAME}"
-        // Credentials ID from Jenkins (the ID you set in the prerequisites)
         DOCKER_CREDS = credentials('gowshikm')
     }
+    // FIX: Define the variable globally at the top of the pipeline
+    def dockerImage
+
     stages {
         stage('Checkout SCM') {
             steps {
-                // Clone the repository that contains the Dockerfile
                 git branch: 'main', 
                 url: "https://github.com/your-username/${REPO_NAME}.git"
             }
@@ -22,7 +21,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image using the Dockerfile in the current directory (.)
+                    // Assign the built image to the global variable
                     dockerImage = docker.build("${IMAGE_NAME}:${env.BUILD_ID}")
                 }
             }
@@ -31,11 +30,8 @@ pipeline {
         stage('Test Docker Image') {
             steps {
                 script {
-                    // Run a simple test inside the container (e.g., check if it starts)
-                    // This is optional but good practice. Customize the test command for your image.
                     dockerImage.inside("--rm") {
                         sh 'echo "Container is running successfully!"'
-                        // Example: sh 'python --version' or sh 'curl --help'
                     }
                 }
             }
@@ -44,11 +40,8 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Log in to the container registry using the credentials stored in Jenkins
                     docker.withRegistry('', "${env.DOCKER_CREDS}") {
-                        // Push the image with the BUILD_ID tag
                         dockerImage.push("${env.BUILD_ID}")
-                        // Also push it with the 'latest' tag
                         dockerImage.push('latest')
                     }
                 }
@@ -58,13 +51,14 @@ pipeline {
     
     post {
         always {
-            // Clean up built images from the Jenkins agent to save disk space
+            echo 'Docker build pipeline finished.'
+            // FIX: Check if the variable exists before trying to use it
             script {
-                if (dockerImage) {
+                // This checks if the 'Build Docker Image' stage ran successfully
+                if (dockerImage != null) {
                     dockerImage.clean()
                 }
             }
-            echo 'Docker build pipeline finished.'
         }
         success {
             echo "Image pushed successfully: ${IMAGE_NAME}:latest"
