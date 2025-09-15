@@ -62,8 +62,10 @@ pipeline {
         //     }
          }
         success {
+            script{
             def imageName = "${env.REGISTRY_USER}/${env.REPO_NAME}"
             echo "✅ Image pushed successfully: ${imageName}:latest"
+            }
         }
         failure {
             echo 'Pipeline failed! Check the logs.'
