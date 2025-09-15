@@ -20,7 +20,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:${env.DOCKER_TAG}")
+                    docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}")
                 }
             }
         }
@@ -28,7 +28,7 @@ pipeline {
         stage('Test Docker Image') {
             steps {
                 script {
-                    docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
+                    docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
                         sh 'echo "Container is running successfully!"'
                     }
                 }
@@ -39,8 +39,8 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', env.DOCKER_CREDS) {
-                        docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").push()
-                        docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
+                        docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push()
+                        docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
                     }
                 }
             }
@@ -52,15 +52,15 @@ pipeline {
             echo 'Docker build pipeline finished.'
             script {
                 try {
-                    sh "docker rmi ${IMAGE_NAME}:${env.DOCKER_TAG} || true"
-                    sh "docker rmi ${IMAGE_NAME}:latest || true"
+                    sh "docker rmi ${env.IMAGE_NAME}:${env.DOCKER_TAG} || true"
+                    sh "docker rmi ${env.IMAGE_NAME}:latest || true"
                 } catch (Exception e) {
                     echo "Cleanup failed: ${e.message}"
                 }
             }
         }
         success {
-            echo "Image pushed successfully: ${IMAGE_NAME}:latest"
+            echo "Image pushed successfully: ${env.IMAGE_NAME}:latest"
         }
         failure {
             echo 'Pipeline failed! Check the logs.'
