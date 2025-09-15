@@ -6,6 +6,7 @@ pipeline {
         REGISTRY_USER = 'gowshikm'
         DOCKER_TAG    = "${BUILD_ID}"
         IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}"
+        DOCKERFILE_DIR = "Calculator App"
     }
 
     stages {
@@ -29,7 +30,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}", "Calculator App")
+                     dir(env.DOCKERFILE_DIR) {
+                        docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}")
+                    }
                 }
             }
         }
