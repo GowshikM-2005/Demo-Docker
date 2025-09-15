@@ -52,8 +52,10 @@ pipeline {
             echo 'Docker build pipeline finished.'
             script {
                 try {
+                   node{ 
                     sh "docker rmi ${env.IMAGE_NAME}:${env.DOCKER_TAG} || true"
-                    sh "docker rmi ${env.IMAGE_NAME}:latest || true"
+                    sh "docker rmi ${env.IMAGE_NAME}:latest || true" 
+                   }
                 } catch (Exception e) {
                     echo "Cleanup failed: ${e.message}"
                 }
