@@ -5,6 +5,7 @@ pipeline {
         REGISTRY_USER = 'gowshikm' // Change this!
         IMAGE_NAME = "${REGISTRY_USER}/${REPO_NAME}"
         DOCKER_CREDS = credentials('gowshikm')
+        DOCKER_TAG = "${env.BUILD_ID}"
     }
 
     stages {
@@ -19,7 +20,7 @@ pipeline {
             steps {
                 script {
                     // Build the image - we'll handle cleanup differently
-                    docker.build("${IMAGE_NAME}:${env.BUILD_ID}")
+                    docker.build("${IMAGE_NAME}:${env.DOCKER_TAG}")
                 }
             }
         }
