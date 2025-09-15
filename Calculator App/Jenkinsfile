@@ -4,26 +4,32 @@ pipeline {
     environment {
         REPO_NAME     = 'demo-docker'
         REGISTRY_USER = 'gowshikm'
-        DOCKER_CREDS  = credentials('secreat')
         DOCKER_TAG    = "${BUILD_ID}"
         IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}"
-        DOCKERFILE_DIR = "Calculator App"
     }
 
     stages {
-    stage('Checkout SCM') {
+        stage('Checkout SCM') {
             steps {
                 git branch: 'main',
                     url: "https://github.com/GowshikM-2005/Demo-Docker.git"
             }
         }
 
+        stage('Debug: Check Workspace') {
+            steps {
+                script {
+                    echo "Workspace directory: ${WORKSPACE}"
+                    sh "ls -la ${WORKSPACE}"
+                    sh "ls -la '${WORKSPACE}/Calculator App' || echo 'Calculator App directory not found'"
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                     dir(env.DOCKERFILE_DIR) {
-                        docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}")
-                    }
+                    docker.build("${env.IMAGE_NAME}:${env.DOCKER_TAG}", "Calculator App")
                 }
             }
         }
@@ -41,9 +47,16 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('', env.DOCKER_CREDS) {
-                       // docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push()
-                        docker.image("${env.IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
+                    withCredentials([usernamePassword(
+                        credentialsId: 'secreat',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )]) {
+                        sh """
+                            docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                            docker push ${env.IMAGE_NAME}:${env.DOCKER_TAG}
+                            docker push ${env.IMAGE_NAME}:latest
+                        """
                     }
                 }
             }
@@ -51,23 +64,13 @@ pipeline {
     }
 
     post {
-         always {
-             echo 'Docker build pipeline finished.'
-        //     script {
-        //         try {
-        //             node{
-        //             sh "docker rmi ${env.IMAGE_NAME}:${env.DOCKER_TAG} || true"
-        //             sh "docker rmi ${env.IMAGE_NAME}:latest || true"
-        //             }
-        //         } catch (Exception e) {
-        //             echo "Cleanup failed: ${e.message}"
-        //         }
-        //     }
-         }
+        always {
+            echo 'Docker build pipeline finished.'
+        }
         success {
-            script{
-            def imageName = "${env.REGISTRY_USER}/${env.REPO_NAME}"
-            echo "✅ Image pushed successfully: ${imageName}:latest"
+            script {
+                def imageName = "${env.REGISTRY_USER}/${env.REPO_NAME}"
+                echo "✅ Image pushed successfully: ${imageName}:latest"
             }
         }
         failure {
