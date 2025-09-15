@@ -29,7 +29,7 @@ pipeline {
             steps {
                 script {
                     // Test the image
-                    docker.image("${IMAGE_NAME}:${env.BUILD_ID}").inside("--rm") {
+                    docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").inside("--rm") {
                         sh 'echo "Container is running successfully!"'
                     }
                 }
@@ -40,8 +40,8 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', "${env.DOCKER_CREDS}") {
-                        docker.image("${IMAGE_NAME}:${env.BUILD_ID}").push("${env.BUILD_ID}")
-                        docker.image("${IMAGE_NAME}:${env.BUILD_ID}").push('latest')
+                        docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").push()
+                        docker.image("${IMAGE_NAME}:${env.DOCKER_TAG}").push('latest')
                     }
                 }
             }
