@@ -48,8 +48,8 @@ pipeline {
     }
 
     post {
-        // always {
-        //     echo 'Docker build pipeline finished.'
+         always {
+             echo 'Docker build pipeline finished.'
         //     script {
         //         try {
         //             node{
@@ -60,9 +60,10 @@ pipeline {
         //             echo "Cleanup failed: ${e.message}"
         //         }
         //     }
-        // }
+         }
         success {
-            echo "Image pushed successfully: ${env.IMAGE_NAME}:latest"
+            def imageName = "${env.REGISTRY_USER}/${env.REPO_NAME}"
+            echo "✅ Image pushed successfully: ${imageName}:latest"
         }
         failure {
             echo 'Pipeline failed! Check the logs.'
