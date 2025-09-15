@@ -1,0 +1,76 @@
+pipeline {
+    agent any
+    environment {
+        // Name of your Git repository
+        REPO_NAME = 'Demo-Docker'
+        // Your container registry username (e.g., for Docker Hub)
+        REGISTRY_USER = 'gowshikm'
+        // The full name for the image to be built
+        IMAGE_NAME = "${REGISTRY_USER}/${REPO_NAME}"
+        // Credentials ID from Jenkins (the ID you set in the prerequisites)
+        DOCKER_CREDS = credentials('gowshikm')
+    }
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                // Clone the repository that contains the Dockerfile
+                git branch: 'main', 
+                url: "https://github.com/your-username/${REPO_NAME}.git"
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image using the Dockerfile in the current directory (.)
+                    dockerImage = docker.build("${IMAGE_NAME}:${env.BUILD_ID}")
+                }
+            }
+        }
+        
+        stage('Test Docker Image') {
+            steps {
+                script {
+                    // Run a simple test inside the container (e.g., check if it starts)
+                    // This is optional but good practice. Customize the test command for your image.
+                    dockerImage.inside("--rm") {
+                        sh 'echo "Container is running successfully!"'
+                        // Example: sh 'python --version' or sh 'curl --help'
+                    }
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    // Log in to the container registry using the credentials stored in Jenkins
+                    docker.withRegistry('', "${env.DOCKER_CREDS}") {
+                        // Push the image with the BUILD_ID tag
+                        dockerImage.push("${env.BUILD_ID}")
+                        // Also push it with the 'latest' tag
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up built images from the Jenkins agent to save disk space
+            script {
+                if (dockerImage) {
+                    dockerImage.clean()
+                }
+            }
+            echo 'Docker build pipeline finished.'
+        }
+        success {
+            echo "Image pushed successfully: ${IMAGE_NAME}:latest"
+        }
+        failure {
+            echo 'Pipeline failed! Check the logs.'
+        }
+    }
+}
