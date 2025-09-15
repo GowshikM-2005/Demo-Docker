@@ -18,8 +18,8 @@ pipeline {
             steps {
                 script {
                     // Compute image name once
-                    IMAGE_NAME = "${env.REGISTRY_USER}/${env.REPO_NAME}"
-                    echo "Using image name: ${IMAGE_NAME}:${env.DOCKER_TAG}"
+                    env.IMAGE_NAME = "${env.REGISTRY_USER}/${env.REPO_NAME}"
+                    echo "Using image name: ${env.IMAGE_NAME}:${env.DOCKER_TAG}"
                 }
             }
         }
