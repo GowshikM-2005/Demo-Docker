@@ -4,7 +4,7 @@ pipeline {
     environment {
         REPO_NAME     = 'Demo-Docker'
         REGISTRY_USER = 'gowshikm'
-        DOCKER_CREDS  = credentials('gowshikm')
+        DOCKER_CREDS  = credentials('docker-hub-creds')
         DOCKER_TAG    = "${BUILD_ID}"
         IMAGE_NAME    = "${REGISTRY_USER}/${REPO_NAME}" 
     }
